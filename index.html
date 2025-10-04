@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#4361ee">
+    <title>Sistema de Gestão Escolar</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="container">
+        <!-- TELA DE SELEÇÃO DE ESCOLA -->
+        <div id="school-selection-screen">
+            <header>
+                <h1>Presença+</h1>
+            </header>
+            <main class="welcome-main">
+                <h2 id="school-selection-title">Selecione uma Escola</h2>
+                <div id="school-list" class="school-list"></div>
+                <div class="welcome-actions">
+                    <button id="add-school-btn" class="btn btn-large">Cadastrar Nova Escola</button>
+                </div>
+            </main>
+        </div>
+
+        <!-- PAINEL PRINCIPAL DA APLICAÇÃO -->
+        <div id="main-panel" class="hidden">
+            <header>
+                <h1 id="school-name-header">Nome da Escola</h1>
+                <div class="header-controls">
+                    <span id="db-status-header" class="header-status"></span>
+                    <button id="change-school-btn" class="btn btn-header">Trocar de Escola</button>
+                </div>
+            </header>
+            
+            <!-- ABAS DE NAVEGAÇÃO -->
+            <nav class="tabs">
+                <button class="tab-link active" data-tab="tab-importar">Importar Alunos</button>
+                <button class="tab-link" data-tab="cadastro-manual">Cadastrar Aluno</button>
+                <button class="tab-link" data-tab="registrar-presenca">Registrar Presença</button>
+                <button class="tab-link" data-tab="alunos-registrados">Alunos Registrados</button>
+                <button class="tab-link" data-tab="crachas">Crachás</button>
+                <button class="tab-link" data-tab="configuracoes">Configurações</button>
+                <button class="tab-link" data-tab="tab-exportar">Exportar Backup</button>
+            </nav>
+
+            <main>
+                <!-- ABA DE IMPORTAÇÃO -->
+                <div id="tab-importar" class="tab-content active">
+                    <h2>Importar Alunos</h2>
+                    <div class="card">
+                        <p>Arraste e solte uma planilha (.xlsx) ou um arquivo de banco de dados (.db) na área abaixo para adicionar novos alunos.</p>
+                        <div id="import-drop-zone">
+                            <p>Arraste e solte o arquivo aqui</p>
+                            <p>ou</p>
+                            <input type="file" id="import-file-input" accept=".xlsx, .xls, .db, .sqlite" style="display: none;">
+                            <button id="import-browse-btn" class="btn">Procurar Arquivo</button>
+                        </div>
+                        <div id="import-status" class="status-box">Aguardando arquivo...</div>
+                    </div>
+                </div>
+
+                <!-- ABA DE CADASTRO MANUAL -->
+                <div id="cadastro-manual" class="tab-content">
+                    <h2>Cadastro Manual de Alunos</h2>
+                    <p>Adicione novos alunos à base de dados da escola. IDs são gerados automaticamente ao salvar.</p>
+                    <div class="manual-cadastro-actions">
+                        <button id="add-aluno-row-btn" class="btn">Adicionar Linha</button>
+                        <button id="save-manual-alunos-btn" class="btn btn-success">Salvar Novos Alunos</button>
+                    </div>
+                    <div id="manual-cadastro-status" class="status-box" style="display: none;"></div>
+                    <div class="table-container">
+                        <table id="tabela-cadastro-manual">
+                            <thead><tr><th>Nome</th><th>Turma</th><th>Foto (Opcional)</th><th>Ação</th></tr></thead>
+                            <tbody id="tabela-cadastro-manual-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- ABA REGISTRAR PRESENÇA (COM ÁREA DE CONFIRMAÇÃO) -->
+                <div id="registrar-presenca" class="tab-content">
+                    <h2>Registro de Presença</h2>
+                    <div class="card">
+                        <p>Aponte o leitor para o código de barras ou digite o código e pressione Enter.</p>
+                        <div class="input-group">
+                            <input type="text" id="barcode-input" placeholder="Aguardando código do aluno...">
+                            <button id="search-student-btn" class="btn">Buscar Aluno</button>
+                        </div>
+
+                        <!-- NOVA ÁREA DE CONFIRMAÇÃO (INICIALMENTE OCULTA) -->
+                        <div id="presence-confirmation-area" class="confirmation-container" style="display: none;">
+                            <img id="confirmation-photo" src="assets/img/placeholder.png" alt="Foto do Aluno">
+                            <div class="confirmation-details">
+                                <h3 id="confirmation-name">Nome do Aluno Aparece Aqui</h3>
+                                <p id="confirmation-turma">Turma do Aluno</p>
+                                <button id="confirm-presence-btn" class="btn btn-success">Confirmar Presença</button>
+                                <button id="cancel-presence-btn" class="btn btn-secondary">Cancelar</button>
+                            </div>
+                        </div>
+
+                        <div id="status-presenca" class="status-box">Aguardando leitura...</div>
+                    </div>
+
+                    <div class="card">
+                        <h3>Presenças Registradas Hoje</h3>
+                        <div class="table-container">
+                            <table id="tabela-presenca">
+                                <thead><tr><th>Nome</th><th>Turma</th><th>Hora da Presença</th></tr></thead>
+                                <tbody id="tabela-presenca-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- ABA ALUNOS REGISTRADOS -->
+                <div id="alunos-registrados" class="tab-content">
+                    <h2>Alunos Registrados na Base</h2>
+                    <div class="card table-container">
+                        <table id="tabela-alunos">
+                            <thead><tr><th>Nome</th><th>Turma</th><th>Código de Barras</th><th>Foto</th><th>Ações</th></tr></thead>
+                            <tbody id="tabela-alunos-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- ABA CRACHÁS -->
+                <div id="crachas" class="tab-content">
+                    <h2>Gerenciamento de Crachás</h2>
+                    <div class="card cracha-manager"><div class="aluno-list"><h3>Selecione um Aluno</h3><ul id="lista-crachas-alunos"></ul></div><div class="cracha-preview"><h3>Visualização</h3><canvas id="cracha-canvas" width="631" height="1002"></canvas><div class="button-group"><button id="download-cracha-btn" class="btn" disabled>Baixar Crachá</button><button id="download-todos-crachas-btn" class="btn">Baixar Todos (ZIP)</button></div><div id="zip-status" class="status-box" style="display:none;"></div></div></div>
+                </div>
+
+                <!-- ABA DE CONFIGURAÇÕES -->
+                <div id="configuracoes" class="tab-content">
+                    <h2>Configurações</h2>
+                    <div class="card">
+                        <h3>Pasta para Planilhas de Presença</h3>
+                        <p>Selecione a pasta principal onde as planilhas de presença serão salvas automaticamente. <strong>Esta ação é obrigatória para que o registro de presença funcione.</strong></p>
+                        <button id="select-folder-btn" class="btn">Selecionar Pasta Principal</button>
+                        <div id="folder-status" class="status-box">Nenhuma pasta selecionada.</div>
+                    </div>
+                </div>
+
+                <!-- ABA DE EXPORTAR BACKUP -->
+                <div id="tab-exportar" class="tab-content">
+                    <h2>Exportar Backup do Banco de Dados</h2>
+                    <div class="card">
+                        <p>Faça o download de um backup completo do banco de dados da escola atual no formato SQLite (.db). Este arquivo pode ser usado para restaurar os dados ou importá-los em outro sistema.</p>
+                        <button id="export-db-btn" class="btn btn-large">Baixar Backup do Banco de Dados</button>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- MODAL DE CADASTRO DE ESCOLA -->
+    <div id="add-school-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <h2>Cadastrar Nova Escola</h2>
+            <form id="add-school-form">
+                <div class="form-group"><label for="new-school-name">Nome da Escola</label><input type="text" id="new-school-name" required></div>
+                <div class="form-group"><label>Logo da Escola (Opcional)</label><button type="button" id="select-logo-btn" class="btn btn-secondary">Selecionar Logo</button><span id="logo-file-name">Nenhum arquivo</span></div>
+                <div class="form-group"><label>Template do Crachá</label><button type="button" id="select-template-btn" class="btn btn-secondary">Selecionar Template</button><span id="template-file-name">Nenhum arquivo</span></div>
+                <div class="form-group"><label>Base de Dados de Alunos (.db)</label><button type="button" id="select-db-btn" class="btn btn-secondary">Selecionar Base Existente</button><span class="form-group-divider">ou</span><button type="button" id="create-db-modal-btn" class="btn btn-secondary">Criar Nova Base</button><span id="db-file-name">Nenhum arquivo</span></div>
+                <div id="modal-status" class="status-box" style="display: none;"></div>
+                <div class="modal-actions"><button type="button" id="cancel-modal-btn" class="btn btn-secondary">Cancelar</button><button type="submit" class="btn">Salvar Escola</button></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- SCRIPTS E BIBLIOTECAS (Usando CDNs para garantir o funcionamento) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.5/JsBarcode.all.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/sql-wasm.js"></script>
+    
+    <!-- SEU SCRIPT PRINCIPAL -->
+    <script src="app.js"></script>
+</body>
+</html>
